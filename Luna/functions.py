@@ -8,27 +8,33 @@ import matplotlib.pyplot as plt
 from scipy.stats import skew, kurtosis, norm, kstest, zscore, shapiro
 from sklearn.neighbors import LocalOutlierFactor
 import warnings
-
 from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
+
 
 # input is df where each test (parameter) is represented by a column 
 def exensio_get_features(df):
-    feature_keys = [
-        'Mean', 'Median', 'Std_Dev', 'IQR', 'Skewness', 'Kurtosis', 'Min', 'Max', 
-        'Range', 'Upper_Tail', 'Lower_Tail', 'Extreme_Tail_95', 'Extreme_Tail_99', 
-        'Extreme_Tail_05', 'Extreme_Tail_01', 'Upper_Tail_Mean', 'Upper_Tail_Var', 
-        'Lower_Tail_Mean', 'Lower_Tail_Var', 'Tail_Weight_Ratio', 'Excess_Kurtosis', 
-        'P99', 'P1', 'Outliers_Zscore', 'Outliers_IQR', 'KS_Stat_norm', 'KS_P_value_norm', 
-        'Shapiro_Stat', 'Shapiro_P_value'
-    ]
-    feature_vectors = []    
-    scaler = StandardScaler()
-    normalized_data = scaler.fit_transform(df)
-    df_scaled = pd.DataFrame(normalized_data) 
+    feature_keys = ['Count', 'Unique_Count', 'Mean', 'Median', 'Std_Dev', 'IQR', 'Skewness',
+    'Kurtosis', 'Min', 'Max', 'Range', 'Upper_Tail', 'Lower_Tail', 'Extreme_Tail_95',
+    'Extreme_Tail_99', 'Extreme_Tail_05', 'Extreme_Tail_01', 'Upper_Tail_Mean',
+    'Upper_Tail_Var', 'Lower_Tail_Mean', 'Lower_Tail_Var', 'Tail_Weight_Ratio',
+    'Tail_Length_Ratio_95', 'Tail_Length_Ratio_05', 'Excess_Kurtosis', 'P99', 'P1',
+    'Outliers_Zscore', 'Outliers_Zscore_prop', 'Outliers_IQR', 'Outliers_IQR_prop',
+    'Outliers_Tukey', 'Outliers_Tukey_prop', 'QQ Count', 'KS_Stat_norm', 'KS_P_value_norm',
+    'Shapiro_Stat', 'Shapiro_P_value']
+    feature_vectors = []   
+    # scaler = StandardScaler()
+    # normalized_data = scaler.fit_transform(df)
+    # df_scaled = pd.DataFrame(normalized_data) 
+
+    scaler = MinMaxScaler()
+    minmax_data = scaler.fit_transform(df)
+    df_scaled = pd.DataFrame(minmax_data)
+
     for column in df_scaled.columns:  #iterate through each test  
         values = df_scaled[column].dropna()
         if values.empty:
-            empty_vector = {key: [0] for key in feature_keys}
+            empty_vector = {key: 0 for key in feature_keys}
             feature_vectors.append(empty_vector)
             continue
 
@@ -144,7 +150,7 @@ def exensio_get_features(df):
                 'Upper_Tail_Mean': upper_tail_mean,
                 'Upper_Tail_Var': upper_tail_var,
                 'Lower_Tail_Mean': lower_tail_mean,
-                'Lower_Tail_Mean': lower_tail_var,
+                'Lower_Tail_Var': lower_tail_var,
                 #'Percentile_Ratio_95_5': percentile_ratio,
                 'Tail_Weight_Ratio': tail_weight_ratio,
                 'Tail_Length_Ratio_95': tail_length_ratio_95,
@@ -295,7 +301,7 @@ def get_features(df):
                 'Upper_Tail_Mean': upper_tail_mean,
                 'Upper_Tail_Var': upper_tail_var,
                 'Lower_Tail_Mean': lower_tail_mean,
-                'Lower_Tail_Mean': lower_tail_var,
+                'Lower_Tail_Var': lower_tail_var,
                 #'Percentile_Ratio_95_5': percentile_ratio,
                 'Tail_Weight_Ratio': tail_weight_ratio,
                 'Tail_Length_Ratio_95': tail_length_ratio_95,
