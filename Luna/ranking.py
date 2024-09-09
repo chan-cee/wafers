@@ -5,9 +5,10 @@ def rank_pred(model, features): # features input refers to resultant df after ca
 
     df_probs = pd.DataFrame(features.copy())
     df_probs['Prediction Prob'] = probs
-
+    
     df_sorted = df_probs.sort_values(by='Prediction Prob', ascending=False)
-    return df_sorted['Prediction Prob']
+
+    return df_probs['Prediction Prob']
 
     # columns = df_sorted.columns.tolist()
     # new_order = columns[-1:] + columns[:-1] 
@@ -32,8 +33,7 @@ def custom_rank_pred(model, features, criteria): # features input refers to resu
 
     #df_merged = names.join(df_sorted, how='inner')  # join on the row index
     #df_merged = df_merged.reindex(df_sorted.index)
-    return df_sorted['Prediction Prob']
-
+    return df_probs['Prediction Prob']
 
 
 def get_names(df): # df refers to exensio dataset with test parameter names (before feature processing)
