@@ -1,6 +1,6 @@
 import pandas as pd
 
-def rank_pred(model, features, names): # features input refers to df result after using get_features function
+def rank_pred(model, features, names): # features input refers to resultant df after calling get_features function, names input refers to corresponding names after calling get_names 
     probs = model.predict_proba(features)[:, 1] 
 
     df_probs = pd.DataFrame(features.copy())
