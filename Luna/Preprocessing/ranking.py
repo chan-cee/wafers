@@ -56,13 +56,14 @@ def get_feature_ranking(ey_test_columns, ey_split_column, model, feature = 'None
         single_split_df = single_split_df.drop('Cu seed/ECP', axis=1)
         
         input_features = features.exensio_get_features(single_split_df)
-        selected_feature = input_features[feature]
+        #selected_feature = input_features[feature]
         predictions = model.predict(input_features)
         metric = input_features['Tail_Weight_Ratio'] + input_features['Tail_Length_Ratio_95'] + input_features['Tail_Length_Ratio_05'] + input_features['Outliers_Zscore_prop']
         #confidences = rank_pred(model, input_features)
 
         output_df[f"Split {split} Outlier/Longtail?"] = predictions #pd.Series(predictions, index=header_list)
         if feature != 'None':
+            selected_feature = input_features[feature]
             output_df[f"Split {split} {feature}"] = selected_feature
         output_df[f"Split {split} Composite Tail Score"] = metric
         #output_df[f"Split {split} Confidence"] = confidences
