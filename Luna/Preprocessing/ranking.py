@@ -39,7 +39,7 @@ def get_predictions_ranking(ey_test_columns, ey_split_column, model):
 
 #[Count, Unique_Count, Mean, Median, Std_Dev, IQR, Skewness, Kurtosis, Min, Max, Range, Upper_Tail, Lower_Tail, Extreme_Tail_95, Extreme_Tail_99, Extreme_Tail_05, Extreme_Tail_01, Upper_Tail_Mean, Upper_Tail_Var, Lower_Tail_Mean, Lower_Tail_Var, Tail_Weight_Ratio, Tail_Length_Ratio_95, Tail_Length_Ratio_05, Excess_Kurtosis, P99, P1, Outliers_Zscore, Outliers_Zscore_prop, Outliers_IQR, Outliers_IQR_prop, Outliers_Tukey, Outliers_Tukey_prop, QQ Count, KS_Stat_norm, KS_P_value_norm, Shapiro_Stat, Shapiro_P_value]
 # tail weight ratio ('Tail_Weight_Ratio') + tail length ratio ('Tail_Length_Ratio_95', 'Tail_Length_Ratio_05') + outlier proportion ('Outliers_Zscore_prop')
-def get_feature_ranking(ey_test_columns, ey_split_column, model, feature):
+def get_feature_ranking(ey_test_columns, ey_split_column, model, feature = 'None'):
 
     ULT_df = pd.DataFrame(data=ey_test_columns)
     ULT_split_column_df = pd.DataFrame(data=ey_split_column)
@@ -62,7 +62,8 @@ def get_feature_ranking(ey_test_columns, ey_split_column, model, feature):
         #confidences = rank_pred(model, input_features)
 
         output_df[f"Split {split} Outlier/Longtail?"] = predictions #pd.Series(predictions, index=header_list)
-        output_df[f"Split {split} {feature}"] = selected_feature
+        if feature != 'None':
+            output_df[f"Split {split} {feature}"] = selected_feature
         output_df[f"Split {split} Composite Tail Score"] = metric
         #output_df[f"Split {split} Confidence"] = confidences
         
