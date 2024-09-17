@@ -82,7 +82,11 @@ def exensio_get_features(df):
             lower_tail_var = np.var(lower_tail)
 
         #tail_weight_ratio = np.sum((values > (median + 1.5 * iqr)) | (values < (median - 1.5 * iqr))) / count
-        tail_weight_ratio = np.sum((values >= p95) | (values <= p5)) / count
+        #tail_weight_ratio = np.sum((values >= p95) | (values <= p5)) / count
+        if num_unique <= 2: # should this be 1 or 2?
+            tail_weight_ratio = 0
+        else:
+            tail_weight_ratio = np.sum((values >= p95) | (values <= p5)) / count
         tail_length_ratio_95 = tail_length_95 / range_ if range_ > 0 else 0
         tail_length_ratio_05 = tail_length_05 / range_ if range_ > 0 else 0
         excess_kurtosis = kurt - 3
@@ -105,7 +109,7 @@ def exensio_get_features(df):
         count_outliers_tukey_prop = count_outliers_tukey / count
 
         outliers_qq, long_tail_qq = classify_qq_outliers(values)
-        count_positive_qq = outliers_qq + long_tail_qq
+        count_positive_qq = (outliers_qq + long_tail_qq) / count
 
         # Goodness of fit parameters
         with warnings.catch_warnings():
@@ -221,7 +225,11 @@ def get_features(df):
             lower_tail_var = np.var(lower_tail)
 
         #tail_weight_ratio = np.sum((values > (median + 1.5 * iqr)) | (values < (median - 1.5 * iqr))) / count
-        tail_weight_ratio = np.sum((values >= p95)| (values >= p5)) / count
+        #tail_weight_ratio = np.sum((values >= p95)| (values >= p5)) / count
+        if num_unique <= 2: # should this be 1 or 2?
+            tail_weight_ratio = 0
+        else:
+            tail_weight_ratio = np.sum((values >= p95) | (values <= p5)) / count
         tail_length_ratio_95 = tail_length_95 / range_ if range_ > 0 else 0
         tail_length_ratio_05 = tail_length_05 / range_ if range_ > 0 else 0
         excess_kurtosis = kurt - 3
@@ -244,7 +252,7 @@ def get_features(df):
         count_outliers_tukey_prop = count_outliers_tukey / count
 
         outliers_qq, long_tail_qq = classify_qq_outliers(values)
-        count_positive_qq = outliers_qq + long_tail_qq
+        count_positive_qq = (outliers_qq + long_tail_qq) / count
 
         # Goodness of fit parameters
         with warnings.catch_warnings():
