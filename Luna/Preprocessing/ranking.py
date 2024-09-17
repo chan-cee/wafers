@@ -56,21 +56,34 @@ def get_feature_ranking(ey_test_columns, ey_split_column, model, feature = 'None
         single_split_df = single_split_df.drop('Cu seed/ECP', axis=1)
         
         input_features = features.exensio_get_features(single_split_df)
-        #selected_feature = input_features[feature]
         predictions = model.predict(input_features)
-        metric = input_features['Tail_Weight_Ratio'] + input_features['Tail_Length_Ratio_95'] + input_features['Tail_Length_Ratio_05'] + input_features['Outliers_Zscore_prop']
-        #confidences = rank_pred(model, input_features)
+        confidences = rank_pred(model, input_features)
+
+        tail_weight_ratio = input_features['Tail_Weight_Ratio']
+        upp_tail_length_ratio = input_features['Tail_Length_Ratio_95']
+        low_tail_length_ratio = input_features['Tail_Length_Ratio_05']
+        outlier_prop = input_features['Outliers_IQR_prop']
+        qq_count = input_features['QQ Count']
+        metric = tail_weight_ratio + upp_tail_length_ratio + low_tail_length_ratio + outlier_prop + qq_count
+        confidences = rank_pred(model, input_features)
 
         output_df[f"Split {split} Outlier/Longtail?"] = predictions #pd.Series(predictions, index=header_list)
+        output_df[f"Split {split} Model Confidence"] = confidences
+        output_df[f"Split {split} Composite Tail Score"] = metric
+        output_df[f"Split {split} Upper Tail Weight Ratio"] = tail_weight_ratio
+        output_df[f"Split {split} Upper Tail Length Ratio"] = upp_tail_length_ratio
+        output_df[f"Split {split} Lower Tail Length Ratio"] = low_tail_length_ratio
+        output_df[f"Split {split} Outlier_Prop"] = outlier_prop
+        output_df[f"Split {split} QQ Count"] = qq_count
+
         if feature != 'None':
             selected_feature = input_features[feature]
             output_df[f"Split {split} {feature}"] = selected_feature
-        output_df[f"Split {split} Composite Tail Score"] = metric
-        #output_df[f"Split {split} Confidence"] = confidences
-        
-    prediction_column_names = [col for col in output_df.columns if 'Outlier' in col]
-    output_df['All Splits Flag'] = (output_df[prediction_column_names] == 1).any(axis=1).astype(int)
 
+    prediction_column_names = [col for col in output_df.columns if 'Outlier' in col]
+    output_df['Outlier/Longtail?'] = (output_df[prediction_column_names] == 1).any(axis=1).astype(int)
+    output_df['Outlier/Longtail?'] = output_df['Outlier/Longtail?'].apply(lambda x: 'Yes' if x == 1 else 'No')
+    
     #output_df['Outlier/Longtail?'] = output_df['All Splits Flag'].apply(lambda x: 'Yes' if x == 1 else 'No')
     #output_df.drop(columns=['All Splits Flag'], axis = 1, inplace=True)
     return output_df
