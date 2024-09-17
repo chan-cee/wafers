@@ -39,23 +39,47 @@ def get_predictions_ranking(ey_test_columns, ey_split_column, model):
 
 #[Count, Unique_Count, Mean, Median, Std_Dev, IQR, Skewness, Kurtosis, Min, Max, Range, Upper_Tail, Lower_Tail, Extreme_Tail_95, Extreme_Tail_99, Extreme_Tail_05, Extreme_Tail_01, Upper_Tail_Mean, Upper_Tail_Var, Lower_Tail_Mean, Lower_Tail_Var, Tail_Weight_Ratio, Tail_Length_Ratio_95, Tail_Length_Ratio_05, Excess_Kurtosis, P99, P1, Outliers_Zscore, Outliers_Zscore_prop, Outliers_IQR, Outliers_IQR_prop, Outliers_Tukey, Outliers_Tukey_prop, QQ Count, KS_Stat_norm, KS_P_value_norm, Shapiro_Stat, Shapiro_P_value]
 # tail weight ratio ('Tail_Weight_Ratio') + tail length ratio ('Tail_Length_Ratio_95', 'Tail_Length_Ratio_05') + outlier proportion ('Outliers_Zscore_prop')
-def get_feature_ranking(ey_test_columns, ey_split_column, model, feature = 'None'):
+def get_feature_ranking(ey_test_columns, model, ey_split_column = None , feature = None):
 
     ULT_df = pd.DataFrame(data=ey_test_columns)
-    ULT_split_column_df = pd.DataFrame(data=ey_split_column)
-    merged_ULT_df = pd.concat([ULT_df, ULT_split_column_df['Cu seed/ECP']], axis=1)
-
     test_names = ULT_df.columns.tolist()
-    unique_splits_list = merged_ULT_df["Cu seed/ECP"].unique().tolist()
-
-    #ranking_df = pd.DataFrame(index=test_list)
     output_df = pd.DataFrame({"Test Name": test_names}) # adding row indexes (naming it 'Test Name')
 
-    for split in unique_splits_list:
-        single_split_df = merged_ULT_df[merged_ULT_df["Cu seed/ECP"] == split]
-        single_split_df = single_split_df.drop('Cu seed/ECP', axis=1)
-        
-        input_features = features.exensio_get_features(single_split_df)
+    if ey_split_column:
+        ULT_split_column_df = pd.DataFrame(data=ey_split_column)
+        merged_ULT_df = pd.concat([ULT_df, ULT_split_column_df['Cu seed/ECP']], axis=1)
+        unique_splits_list = merged_ULT_df["Cu seed/ECP"].unique().tolist()
+
+        for split in unique_splits_list:
+            single_split_df = merged_ULT_df[merged_ULT_df["Cu seed/ECP"] == split]
+            single_split_df = single_split_df.drop('Cu seed/ECP', axis=1)
+            
+            input_features = features.exensio_get_features(single_split_df)
+            predictions = model.predict(input_features)
+            confidences = rank_pred(model, input_features)
+
+            tail_weight_ratio = input_features['Tail_Weight_Ratio']
+            upp_tail_length_ratio = input_features['Tail_Length_Ratio_95']
+            low_tail_length_ratio = input_features['Tail_Length_Ratio_05']
+            outlier_prop = input_features['Outliers_IQR_prop']
+            qq_count = input_features['QQ Count']
+            metric = tail_weight_ratio + upp_tail_length_ratio + low_tail_length_ratio + outlier_prop + qq_count
+            confidences = rank_pred(model, input_features)
+
+            output_df[f"Split {split} Outlier/Longtail?"] = predictions #pd.Series(predictions, index=header_list)
+            output_df[f"Split {split} Model Confidence"] = confidences
+            output_df[f"Split {split} Composite Tail Score"] = metric
+            output_df[f"Split {split} Upper Tail Weight Ratio"] = tail_weight_ratio
+            output_df[f"Split {split} Upper Tail Length Ratio"] = upp_tail_length_ratio
+            output_df[f"Split {split} Lower Tail Length Ratio"] = low_tail_length_ratio
+            output_df[f"Split {split} Outlier_Prop"] = outlier_prop
+            output_df[f"Split {split} QQ Count"] = qq_count
+
+            if not feature:
+                selected_feature = input_features[feature]
+                output_df[f"Split {split} {feature}"] = selected_feature
+    else:
+        input_features = features.exensio_get_features(ULT_df)
         predictions = model.predict(input_features)
         confidences = rank_pred(model, input_features)
 
@@ -67,25 +91,20 @@ def get_feature_ranking(ey_test_columns, ey_split_column, model, feature = 'None
         metric = tail_weight_ratio + upp_tail_length_ratio + low_tail_length_ratio + outlier_prop + qq_count
         confidences = rank_pred(model, input_features)
 
-        output_df[f"Split {split} Outlier/Longtail?"] = predictions #pd.Series(predictions, index=header_list)
-        output_df[f"Split {split} Model Confidence"] = confidences
-        output_df[f"Split {split} Composite Tail Score"] = metric
-        output_df[f"Split {split} Upper Tail Weight Ratio"] = tail_weight_ratio
-        output_df[f"Split {split} Upper Tail Length Ratio"] = upp_tail_length_ratio
-        output_df[f"Split {split} Lower Tail Length Ratio"] = low_tail_length_ratio
-        output_df[f"Split {split} Outlier_Prop"] = outlier_prop
-        output_df[f"Split {split} QQ Count"] = qq_count
+        output_df["Outlier/Longtail?"] = predictions #pd.Series(predictions, index=header_list)
+        output_df["Model Confidence"] = confidences
+        output_df["Composite Tail Score"] = metric
+        output_df["Upper Tail Weight Ratio"] = tail_weight_ratio
+        output_df["Upper Tail Length Ratio"] = upp_tail_length_ratio
+        output_df["Lower Tail Length Ratio"] = low_tail_length_ratio
+        output_df["Outlier_Prop"] = outlier_prop
+        output_df["QQ Count"] = qq_count
 
-        if feature != 'None':
-            selected_feature = input_features[feature]
-            output_df[f"Split {split} {feature}"] = selected_feature
 
-    prediction_column_names = [col for col in output_df.columns if 'Outlier' in col]
+    prediction_column_names = [col for col in output_df.columns if '?' in col]
     output_df['Outlier/Longtail?'] = (output_df[prediction_column_names] == 1).any(axis=1).astype(int)
     output_df['Outlier/Longtail?'] = output_df['Outlier/Longtail?'].apply(lambda x: 'Yes' if x == 1 else 'No')
     
-    #output_df['Outlier/Longtail?'] = output_df['All Splits Flag'].apply(lambda x: 'Yes' if x == 1 else 'No')
-    #output_df.drop(columns=['All Splits Flag'], axis = 1, inplace=True)
     return output_df
 
 
