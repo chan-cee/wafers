@@ -83,8 +83,8 @@ def exensio_get_features(df):
 
         #tail_weight_ratio = np.sum((values > (median + 1.5 * iqr)) | (values < (median - 1.5 * iqr))) / count
         #tail_weight_ratio = np.sum((values >= p95) | (values <= p5)) / count
-        if num_unique <= 2: # should this be 1 or 2?
-            tail_weight_ratio = 0
+        if num_unique <= 10: 
+            tail_weight_ratio = tail_weight_ratio_discrete(values)
         else:
             tail_weight_ratio = np.sum((values >= p95) | (values <= p5)) / count
         tail_length_ratio_95 = tail_length_95 / range_ if range_ > 0 else 0
@@ -100,7 +100,10 @@ def exensio_get_features(df):
         Q1 = np.percentile(values, 25)
         Q3 = np.percentile(values, 75)
         IQR = Q3 - Q1   
-        outliers_iqr = (values < (Q1 - 1.5 * IQR)) | (values > (Q3 + 1.5 * IQR))
+        if num_unique <= 5: 
+            outliers_iqr = (values < (Q1 - 1 * IQR)) | (values > (Q3 + 1 * IQR))
+        else:
+            outliers_iqr = (values < (Q1 - 1.5 * IQR)) | (values > (Q3 + 1.5 * IQR))
         count_outliers_iqr = np.sum(outliers_iqr)
         count_outliers_iqr_prop = count_outliers_iqr / count
 
@@ -226,8 +229,8 @@ def get_features(df):
 
         #tail_weight_ratio = np.sum((values > (median + 1.5 * iqr)) | (values < (median - 1.5 * iqr))) / count
         #tail_weight_ratio = np.sum((values >= p95)| (values >= p5)) / count
-        if num_unique <= 2: # should this be 1 or 2?
-            tail_weight_ratio = 0
+        if num_unique <= 10: 
+            tail_weight_ratio = tail_weight_ratio_discrete(values)
         else:
             tail_weight_ratio = np.sum((values >= p95) | (values <= p5)) / count
         tail_length_ratio_95 = tail_length_95 / range_ if range_ > 0 else 0
@@ -243,7 +246,10 @@ def get_features(df):
         Q1 = np.percentile(values, 25)
         Q3 = np.percentile(values, 75)
         IQR = Q3 - Q1   
-        outliers_iqr = (values < (Q1 - 1.5 * IQR)) | (values > (Q3 + 1.5 * IQR))
+        if num_unique <= 5: 
+            outliers_iqr = (values < (Q1 - 1 * IQR)) | (values > (Q3 + 1 * IQR))
+        else:
+            outliers_iqr = (values < (Q1 - 1.5 * IQR)) | (values > (Q3 + 1.5 * IQR))
         count_outliers_iqr = np.sum(outliers_iqr)
         count_outliers_iqr_prop = count_outliers_iqr / count
 
@@ -350,6 +356,31 @@ def classify_qq_outliers(data, outlier_threshold=3, long_tail_threshold=3):
     longtail_count = np.sum(long_tail)
 
     return outliers_count, longtail_count
+
+
+from scipy import stats
+
+# when to define as 0
+# 1. Not the mode 2. Appear less frequently than the frequency threshold 3. Deviate from the mode by more than the deviation threshold
+
+def tail_weight_ratio_discrete(values, freq_threshold=0.1, deviation_threshold=0.1):
+    mode = stats.mode(values).mode
+    unique_values, counts = np.unique(values, return_counts=True)
+    value_frequencies = counts / len(values)
+    freq_dict = dict(zip(unique_values, value_frequencies))
+
+    frequencies = np.array([freq_dict[val] for val in unique_values])
+    deviations = np.abs(unique_values - mode)
+    mask = (frequencies < freq_threshold) & (deviations > deviation_threshold)
+    tail_values = unique_values[mask]
+    #tail_values = np.asarray(tail_values).flatten()
+
+    tail_mask = np.isin(values, tail_values)
+    tail_weight_ratio = np.sum(tail_mask) / len(values)
+    
+    return tail_weight_ratio
+
+
 
 
 def exensio_get_features_old(df):
