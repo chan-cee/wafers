@@ -100,7 +100,7 @@ def exensio_get_features(df):
         Q1 = np.percentile(values, 25)
         Q3 = np.percentile(values, 75)
         IQR = Q3 - Q1   
-        if num_unique <= 5: 
+        if num_unique <= 10: 
             outliers_iqr = (values < (Q1 - 1 * IQR)) | (values > (Q3 + 1 * IQR))
         else:
             outliers_iqr = (values < (Q1 - 1.5 * IQR)) | (values > (Q3 + 1.5 * IQR))
@@ -128,7 +128,6 @@ def exensio_get_features(df):
                 ks_stat_norm, ks_p_value_norm = np.nan, np.nan
                 shapiro_stat, shapiro_p_value = np.nan, np.nan
                 print(f"Error during statistical tests: {e}")
-
         return {
             #'Count': count,
             'Unique_Count': num_unique,
@@ -246,7 +245,7 @@ def get_features(df):
         Q1 = np.percentile(values, 25)
         Q3 = np.percentile(values, 75)
         IQR = Q3 - Q1   
-        if num_unique <= 5: 
+        if num_unique <= 10: 
             outliers_iqr = (values < (Q1 - 1 * IQR)) | (values > (Q3 + 1 * IQR))
         else:
             outliers_iqr = (values < (Q1 - 1.5 * IQR)) | (values > (Q3 + 1.5 * IQR))

@@ -39,16 +39,16 @@ def get_predictions_ranking(ey_test_columns, ey_split_column, model):
 
 #[Count, Unique_Count, Mean, Median, Std_Dev, IQR, Skewness, Kurtosis, Min, Max, Range, Upper_Tail, Lower_Tail, Extreme_Tail_95, Extreme_Tail_99, Extreme_Tail_05, Extreme_Tail_01, Upper_Tail_Mean, Upper_Tail_Var, Lower_Tail_Mean, Lower_Tail_Var, Tail_Weight_Ratio, Tail_Length_Ratio_95, Tail_Length_Ratio_05, Excess_Kurtosis, P99, P1, Outliers_Zscore, Outliers_Zscore_prop, Outliers_IQR, Outliers_IQR_prop, Outliers_Tukey, Outliers_Tukey_prop, QQ Count, KS_Stat_norm, KS_P_value_norm, Shapiro_Stat, Shapiro_P_value]
 # tail weight ratio ('Tail_Weight_Ratio') + tail length ratio ('Tail_Length_Ratio_95', 'Tail_Length_Ratio_05') + outlier proportion ('Outliers_Zscore_prop')
-def get_feature_ranking(ey_test_columns, model, ey_split_column = None): 
+def get_feature_ranking(ey_test_columns, model, ey_split_data = None, split_column = None): 
 
     ULT_df = pd.DataFrame(data=ey_test_columns)
     test_names = ULT_df.columns.tolist()
     output_df = pd.DataFrame({"Test Name": test_names}) # adding row indexes (naming it 'Test Name')
 
-    if ey_split_column:
-        ULT_split_column_df = pd.DataFrame(data=ey_split_column)
-        merged_ULT_df = pd.concat([ULT_df, ULT_split_column_df['Cu seed/ECP']], axis=1)
-        unique_splits_list = merged_ULT_df["Cu seed/ECP"].unique().tolist()
+    if ey_split_data:
+        ULT_split_column_df = pd.DataFrame(data=ey_split_data)
+        merged_ULT_df = pd.concat([ULT_df, ULT_split_column_df[split_column]], axis=1)
+        unique_splits_list = merged_ULT_df[split_column].unique().tolist()
 
         for split in unique_splits_list:
             single_split_df = merged_ULT_df[merged_ULT_df["Cu seed/ECP"] == split]
