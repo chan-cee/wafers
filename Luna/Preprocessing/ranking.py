@@ -51,8 +51,8 @@ def get_feature_ranking(ey_test_columns, model, ey_split_data = None, split_colu
         unique_splits_list = merged_ULT_df[split_column].unique().tolist()
 
         for split in unique_splits_list:
-            single_split_df = merged_ULT_df[merged_ULT_df["Cu seed/ECP"] == split]
-            single_split_df = single_split_df.drop('Cu seed/ECP', axis=1)
+            single_split_df = merged_ULT_df[merged_ULT_df[split_column] == split]
+            single_split_df = single_split_df.drop(split_column, axis=1)
             
             input_features = features.exensio_get_features(single_split_df)
             predictions = model.predict(input_features)
