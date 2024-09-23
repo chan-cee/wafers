@@ -45,7 +45,7 @@ def get_feature_ranking(ey_test_columns, model, ey_split_data = None, split_colu
     test_names = ULT_df.columns.tolist()
     output_df = pd.DataFrame({"Test Name": test_names}) # adding row indexes (naming it 'Test Name')
 
-    if ey_split_data:
+    if split_column:
         ULT_split_column_df = pd.DataFrame(data=ey_split_data)
         merged_ULT_df = pd.concat([ULT_df, ULT_split_column_df[split_column]], axis=1)
         unique_splits_list = merged_ULT_df[split_column].unique().tolist()
